@@ -1,13 +1,13 @@
-# Heyllo Chat Plugin for Flutter
+# Heyllo AI ChatBot Plugin for Flutter
 
-A Flutter plugin for easily integrating Heyllo Co chatbots into your mobile applications. This plugin provides a fully customizable chat interface that connects to Heyllo's AI-powered chatbots through Server-Sent Events (SSE).
+A Flutter plugin for easily integrating AI powered chatbots into your mobile applications through [Heyllo.co](https://heyllo.co). This plugin provides a fully customizable chat interface that connects to Heyllo's AI-powered chatbots.
 
 ## Features
 
 - 🧠 Integrate AI-powered chatbots with minimal setup
 - 🎨 Fully customizable UI with comprehensive theme support
 - 🔄 Real-time streaming responses with animated typing indicators
-- 📱 Works across all Flutter platforms (iOS, Android, Web, Desktop)
+- 📱 Works across all Flutter platforms (iOS, Android)
 - 🧩 Easy to integrate with existing Flutter apps
 - 💬 Rich message bubbles with avatars and timestamps
 - 🛠️ Advanced error handling and debugging support
@@ -26,7 +26,7 @@ Add the following to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  heyllo_chat_plugin: ^1.0.0
+  heyllo_ai_chatbot: ^1.0.0
 ```
 
 Run `flutter pub get` to install the plugin.
@@ -37,7 +37,7 @@ The simplest way to add a Heyllo AI chatbot to your app, perfect if you have lit
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:heyllo_chat_plugin/chat_plugin.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin.dart';
 
 void main() {
   runApp(const MyApp());
