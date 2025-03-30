@@ -1,0 +1,2 @@
+/Users/justbrian/dev-work/heylo/chat_plugin/example/android/app/.cxx/Debug/5ab1z6i6/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/justbrian/dev-work/heylo/chat_plugin/example/android/app/.cxx/Debug/5ab1z6i6/armeabi-v7a/CMakeFiles/rebuild_cache.dir

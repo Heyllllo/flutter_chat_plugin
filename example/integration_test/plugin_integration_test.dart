@@ -48,11 +48,11 @@ void main() {
     await tester.runAsync(() async {
       try {
         await chatPlugin.initialize(
-          baseUrl: 'https://invalid-url.example.com',
-          tenantIndex: 'test-tenant',
+          domain: 'https://heyllo.co',
+          chatbotId: 'k57prhqstyxvr72v1ss2y18h',
         );
 
-        await chatPlugin.sendMessage(
+        await chatPlugin.streamResponse(
           message: 'Test message',
         );
 

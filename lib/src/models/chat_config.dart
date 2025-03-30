@@ -1,9 +1,10 @@
+// lib/src/models/chat_config.dart
 class ChatConfig {
-  final String baseUrl;
-  final String tenantIndex;
+  final String domain;
+  final String chatbotId;
 
   const ChatConfig({
-    required this.baseUrl,
-    required this.tenantIndex,
+    required this.domain,
+    required this.chatbotId,
   });
 }

@@ -14,76 +14,130 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('chat_plugin');
 
-  String? _baseUrl;
-  String? _tenantIndex;
+  final http.Client httpClient;
+  String? _domain;
+  String? _chatbotId;
   StreamController<SSEModel>? _streamController;
+
+  MethodChannelChatPlugin({http.Client? httpClient})
+      : httpClient = httpClient ?? http.Client();
 
   @override
   Future<void> initialize({
-    required String baseUrl,
-    required String tenantIndex,
+    required String domain,
+    required String chatbotId,
   }) async {
-    _baseUrl = baseUrl;
-    _tenantIndex = tenantIndex;
+    _domain = domain;
+    _chatbotId = chatbotId;
   }
 
-  @override
-  Future<Map<String, dynamic>> sendMessage({
-    required String message,
-    int? chatBotLogId,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/chatbots/message'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'tenantIndex': _tenantIndex,
-          'chatBotLogId': chatBotLogId,
-          'message': message,
-        }),
-      );
+// In chat_plugin_method_channel.dart
+// In chat_plugin_method_channel.dart
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to send message: ${response.statusCode}');
-      }
-
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('Error sending message: $e');
-      throw Exception('Error sending message: $e');
-    }
-  }
-
+// Add detailed logging to the streamResponse method
   @override
   Stream<String> streamResponse({
-    required int chatBotLogId,
     required String message,
   }) {
     try {
-      // Create a transformer to convert SSEModel to String
-      final transformer = StreamTransformer<SSEModel, String>.fromHandlers(
-        handleData: (SSEModel event, EventSink<String> sink) {
-          if (event.event == 'message' && event.data != null) {
-            final data = jsonDecode(event.data!);
-            sink.add(data['text'] as String);
-          }
-        },
-      );
+      // Log the request info
+      print('📡 Chat Plugin: Preparing request');
 
-      final sseUrl = Uri.parse('$_baseUrl/chat/$_tenantIndex').replace(
+      // Construct URL: https://heyllo.co/api/chat/syihwef?query=Hi
+      final sseUrl = Uri.parse('$_domain/api/chat/$_chatbotId').replace(
         queryParameters: {
-          'log_id': chatBotLogId.toString(),
           'query': message,
         },
       );
+
+      // Log the URL being accessed
+      print('📡 Chat Plugin: Connecting to SSE URL: $sseUrl');
+      print(
+          '📡 Chat Plugin: With headers: Accept=text/event-stream, Cache-Control=no-cache');
 
       // Cleanup any existing stream
       _streamController?.close();
       _streamController = StreamController<SSEModel>();
 
-      // Subscribe to SSE
+      // Create a transformer that logs everything
+      final loggingTransformer =
+          StreamTransformer<SSEModel, SSEModel>.fromHandlers(
+        handleData: (event, sink) {
+          print('📡 Chat Plugin: Received event: ${event.event}');
+          print('📡 Chat Plugin: Received data: ${event.data}');
+          sink.add(event);
+        },
+        handleError: (error, stackTrace, sink) {
+          print('📡 Chat Plugin: Error in SSE stream: $error');
+          print('📡 Chat Plugin: Error stacktrace: $stackTrace');
+          sink.addError(error, stackTrace);
+        },
+        handleDone: (sink) {
+          print('📡 Chat Plugin: SSE stream closed');
+          sink.close();
+        },
+      );
+
+      // Create the regular transformer to convert SSEModel to String
+      // In chat_plugin_method_channel.dart
+// Update the transformer in the streamResponse method
+
+      final transformer = StreamTransformer<SSEModel, String>.fromHandlers(
+        handleData: (SSEModel event, EventSink<String> sink) {
+          // Print more detailed debug info
+          print(
+              '📡 Chat Plugin: Processing event: "${event.event}" with data: ${event.data}');
+
+          // Handle data events - either empty event name or "message" event
+          if ((event.event == null ||
+                  event.event!.isEmpty ||
+                  event.event == 'message') &&
+              event.data != null) {
+            try {
+              // Trim whitespace before parsing JSON
+              final String cleanData = event.data!.trim();
+              final Map<String, dynamic> jsonData = jsonDecode(cleanData);
+
+              if (jsonData.containsKey('error')) {
+                // This is an error message, handle it as an error
+                final errorMessage = jsonData['error'];
+                print('📡 Chat Plugin: Server returned error: $errorMessage');
+                sink.addError(
+                  Exception(errorMessage),
+                  StackTrace.current,
+                );
+                return;
+              }
+
+              if (jsonData.containsKey('text')) {
+                // This is a text chunk in the expected format
+                print('📡 Chat Plugin: Extracted text: "${jsonData['text']}"');
+                sink.add(jsonData['text']);
+                return;
+              }
+            } catch (e) {
+              // Not JSON or couldn't parse - just treat as regular text
+              print(
+                  '📡 Chat Plugin: Could not parse as JSON: "${event.data}" - Error: $e');
+            }
+
+            // Default behavior - pass through the raw data
+            print('📡 Chat Plugin: Using raw data: ${event.data}');
+            sink.add(event.data!);
+          } else if (event.event == 'stream-done') {
+            // Handle the stream-done event - nothing to do, just for tracking
+            print('📡 Chat Plugin: Stream done event received');
+          }
+        },
+        handleError: (error, stackTrace, sink) {
+          // Propagate errors through the stream
+          print('📡 Chat Plugin: Error in transformer: $error');
+          sink.addError(error, stackTrace);
+        },
+      );
+      print('📡 Chat Plugin: Subscribing to SSE stream');
+
+      // Subscribe to SSE with logging
       final stream = SSEClient.subscribeToSSE(
         method: SSERequestType.GET,
         url: sseUrl.toString(),
@@ -94,41 +148,16 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
         oldStreamController: _streamController,
       );
 
-      // Transform and return the stream
-      return stream.transform(transformer);
-    } catch (e) {
-      print('Error establishing SSE connection: $e');
-      throw Exception('Error establishing SSE connection: $e');
-    }
-  }
+      print('📡 Chat Plugin: SSE subscription created, waiting for events...');
 
-  @override
-  Future<Map<String, dynamic>> saveChatMessage({
-    required String message,
-    required int chatBotLogId,
-    int? chatBotLogMessageId,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/chatbots/log'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'chatBotLogId': chatBotLogId,
-          'chatBotLogMessageId': chatBotLogMessageId,
-          'message': message,
-        }),
+      // Transform with logging first, then with the regular transformer
+      return stream.transform(loggingTransformer).transform(transformer);
+    } catch (e) {
+      print('📡 Chat Plugin: Error establishing SSE connection: $e');
+      return Stream<String>.error(
+        Exception('Error establishing SSE connection: $e'),
+        StackTrace.current,
       );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to save message');
-      }
-
-      return jsonDecode(response.body);
-    } catch (e) {
-      print('Error saving message: $e');
-      throw Exception('Error saving message: $e');
     }
   }
 
@@ -138,5 +167,31 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
     SSEClient.unsubscribeFromSSE();
     _streamController?.close();
     _streamController = null;
+  }
+}
+
+// A simple HTTP logging interceptor
+class LoggingInterceptor extends http.BaseClient {
+  final http.Client _inner = http.Client();
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // Log request details
+    print('📡 HTTP: ${request.method} ${request.url}');
+    print('📡 HTTP: Headers: ${request.headers}');
+
+    // Send the request
+    final response = await _inner.send(request);
+
+    // Log response details
+    print('📡 HTTP: Response status: ${response.statusCode}');
+    print('📡 HTTP: Response headers: ${response.headers}');
+
+    return response;
+  }
+
+  @override
+  void close() {
+    _inner.close();
   }
 }

@@ -16,90 +16,106 @@ class ChatService extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> initialize({
-    required String baseUrl,
-    required String tenantIndex,
+    required String domain,
+    required String chatbotId,
   }) async {
     await _plugin.initialize(
-      baseUrl: baseUrl,
-      tenantIndex: tenantIndex,
+      domain: domain,
+      chatbotId: chatbotId,
     );
   }
 
-  Future<void> sendMessage(String message) async {
+  Future<void> sendMessage(
+    String message, {
+    Function(String response)? onResponse,
+    Function(dynamic error)? onError,
+  }) async {
     if (message.trim().isEmpty) return;
 
     try {
       _isLoading = true;
       notifyListeners();
 
-      // Send initial message
-      final response = await _plugin.sendMessage(
+      // Add user message with timestamp
+      _addMessage(ChatMessage(
         message: message,
-        chatBotLogId: _messages.isNotEmpty ? _messages.last.chatLogId : null,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
+
+      // Create placeholder for AI response
+      final placeholderMessage = ChatMessage(
+        message: '',
+        isUser: false,
+        isWaiting: true,
+        timestamp: DateTime.now(),
       );
+      _addMessage(placeholderMessage);
 
-      if (response['status'] == 200) {
-        // Add user message
-        _addMessage(ChatMessage(
-          id: response['id'] ?? 0,
-          message: message,
-          isUser: true,
-          chatLogId: response['chatBotLogId'],
-        ));
-
-        // Create placeholder for AI response
-        final placeholder = await _plugin.saveChatMessage(
-          message: '',
-          chatBotLogId: response['chatBotLogId'],
-        );
-
-        if (placeholder['status'] == 200) {
-          final placeholderMessage = ChatMessage(
-            id: placeholder['chatBotLogMessage']['id'],
-            message: '',
-            isUser: false,
-            chatLogId: response['chatBotLogId'],
-            isWaiting: true,
-          );
-          _addMessage(placeholderMessage);
-
-          // Start streaming response
-          _streamResponse(
-            chatBotLogId: response['chatBotLogId'],
-            message: message,
-            messageId: placeholderMessage.id,
-          );
-        }
-      }
+      // Start streaming response
+      _streamResponse(
+        message: message,
+        onResponse: onResponse,
+        onError: onError,
+      );
     } catch (e) {
       print('Error in sendMessage: $e');
-    } finally {
+      if (onError != null) {
+        onError(e);
+      }
       _isLoading = false;
       notifyListeners();
     }
   }
 
   void _streamResponse({
-    required int chatBotLogId,
     required String message,
-    required int messageId,
+    Function(String response)? onResponse,
+    Function(dynamic error)? onError,
   }) {
     _sseSubscription?.cancel();
 
+    // Get the index of the placeholder message (should be the last message)
+    final placeholderIndex = _messages.length - 1;
+    String responseText = '';
+
+    // Max time to wait for response before timing out
+    Timer? timeoutTimer = Timer(const Duration(seconds: 30), () {
+      if (_sseSubscription != null) {
+        _sseSubscription?.cancel();
+        _isLoading = false;
+
+        // Update placeholder with timeout message
+        if (placeholderIndex < _messages.length) {
+          _messages[placeholderIndex] = _messages[placeholderIndex].copyWith(
+            message: 'The server took too long to respond. Please try again.',
+            isWaiting: false,
+          );
+        }
+
+        if (onError != null) {
+          onError('Request timed out after 30 seconds');
+        }
+
+        notifyListeners();
+      }
+    });
+
     _sseSubscription = _plugin
         .streamResponse(
-      chatBotLogId: chatBotLogId,
       message: message,
     )
         .listen(
-      (response) {
-        final index = _messages.indexWhere((m) => m.id == messageId);
-        if (index != -1) {
-          _messages[index] = ChatMessage(
-            id: messageId,
-            message: response,
-            isUser: false,
-            chatLogId: chatBotLogId,
+      (chunk) {
+        // Cancel timeout timer since we got a response
+        timeoutTimer?.cancel();
+
+        // Accumulate the response text
+        responseText += chunk;
+
+        if (placeholderIndex < _messages.length) {
+          _messages[placeholderIndex] = _messages[placeholderIndex].copyWith(
+            message: responseText,
             isWaiting: false,
           );
           notifyListeners();
@@ -107,15 +123,75 @@ class ChatService extends ChangeNotifier {
       },
       onError: (error) {
         print('Error in streamResponse: $error');
+
+        // Cancel timeout timer since we got an error response
+        timeoutTimer?.cancel();
+
+        // Extract error message from exception
+        String errorMessage = error.toString();
+
+        // Try to make error message more user-friendly
+        if (errorMessage.contains('SpaceNotFound')) {
+          errorMessage = 'The chatbot ID was not found on the server.';
+        } else if (errorMessage.contains('500')) {
+          errorMessage = 'The server encountered an internal error.';
+        } else if (errorMessage.contains('404')) {
+          errorMessage = 'The chatbot service could not be found.';
+        } else if (errorMessage.contains('403')) {
+          errorMessage = 'Access to this chatbot is forbidden.';
+        }
+
+        // Update the placeholder message to show the error
+        if (placeholderIndex < _messages.length) {
+          _messages[placeholderIndex] = _messages[placeholderIndex].copyWith(
+            message: 'Error: $errorMessage',
+            isWaiting: false,
+          );
+        }
+
+        // Call the error callback if provided
+        if (onError != null) {
+          onError(error);
+        }
+
+        _isLoading = false;
+        notifyListeners();
       },
       onDone: () {
+        // Cancel timeout timer since the stream is done
+        timeoutTimer?.cancel();
+
+        // Call the onResponse callback with the final text if provided
+        if (onResponse != null && responseText.isNotEmpty) {
+          onResponse(responseText);
+        }
+
         _sseSubscription = null;
+        _isLoading = false;
+        notifyListeners();
       },
     );
   }
 
   void _addMessage(ChatMessage message) {
     _messages.add(message);
+    notifyListeners();
+  }
+
+  /// Add a message directly to the chat (for initial messages or system messages)
+  void addDirectMessage(ChatMessage message) {
+    // Add timestamp if not provided
+    final timestampedMessage = message.timestamp == null
+        ? message.copyWith(timestamp: DateTime.now())
+        : message;
+
+    _messages.add(timestampedMessage);
+    notifyListeners();
+  }
+
+  /// Clear all messages
+  void clearMessages() {
+    _messages.clear();
     notifyListeners();
   }
 

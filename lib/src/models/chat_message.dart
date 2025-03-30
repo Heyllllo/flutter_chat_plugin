@@ -1,33 +1,47 @@
+// lib/src/models/chat_message.dart
 class ChatMessage {
-  final int id;
   final String message;
   final bool isUser;
-  final int chatLogId;
   final bool isWaiting;
+  final DateTime? timestamp;
 
   const ChatMessage({
-    required this.id,
     required this.message,
     required this.isUser,
-    required this.chatLogId,
     this.isWaiting = false,
+    this.timestamp,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      id: json['id'] as int,
       message: json['message'] as String,
       isUser: json['isUser'] as bool,
-      chatLogId: json['chatLogId'] as int,
       isWaiting: json['isWaiting'] as bool? ?? false,
+      timestamp: json['timestamp'] != null
+          ? DateTime.parse(json['timestamp'] as String)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
         'message': message,
         'isUser': isUser,
-        'chatLogId': chatLogId,
         'isWaiting': isWaiting,
+        'timestamp': timestamp?.toIso8601String(),
       };
+
+  /// Create a copy of this message with updated fields
+  ChatMessage copyWith({
+    String? message,
+    bool? isUser,
+    bool? isWaiting,
+    DateTime? timestamp,
+  }) {
+    return ChatMessage(
+      message: message ?? this.message,
+      isUser: isUser ?? this.isUser,
+      isWaiting: isWaiting ?? this.isWaiting,
+      timestamp: timestamp ?? this.timestamp,
+    );
+  }
 }
