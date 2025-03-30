@@ -1,7 +1,6 @@
 // example/lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:chat_plugin/chat_plugin.dart';
-import 'package:chat_plugin/src/models/chat_theme.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -183,12 +182,7 @@ class _AdvancedChatDemoState extends State<AdvancedChatDemo> {
                   timestamp:
                       DateTime.now().subtract(const Duration(minutes: 5)),
                 ),
-                ChatMessage(
-                  message: 'Ask me anything',
-                  isUser: false,
-                  timestamp:
-                      DateTime.now().subtract(const Duration(minutes: 5)),
-                ),
+              
               ],
               onError: (error) {
                 ScaffoldMessenger.of(context).showSnackBar(
