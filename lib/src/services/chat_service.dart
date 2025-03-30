@@ -108,7 +108,7 @@ class ChatService extends ChangeNotifier {
         .listen(
       (chunk) {
         // Cancel timeout timer since we got a response
-        timeoutTimer?.cancel();
+        timeoutTimer.cancel();
 
         // Accumulate the response text
         responseText += chunk;
@@ -125,7 +125,7 @@ class ChatService extends ChangeNotifier {
         print('Error in streamResponse: $error');
 
         // Cancel timeout timer since we got an error response
-        timeoutTimer?.cancel();
+        timeoutTimer.cancel();
 
         // Extract error message from exception
         String errorMessage = error.toString();
@@ -159,7 +159,7 @@ class ChatService extends ChangeNotifier {
       },
       onDone: () {
         // Cancel timeout timer since the stream is done
-        timeoutTimer?.cancel();
+        timeoutTimer.cancel();
 
         // Call the onResponse callback with the final text if provided
         if (onResponse != null && responseText.isNotEmpty) {

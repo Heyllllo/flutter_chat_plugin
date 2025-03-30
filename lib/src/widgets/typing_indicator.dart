@@ -53,8 +53,8 @@ class _BubbleTypingIndicatorState extends State<BubbleTypingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final themeColor =
-        widget.color ?? Theme.of(context).colorScheme.primary.withOpacity(0.7);
+    final themeColor = widget.color ??
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.7);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
