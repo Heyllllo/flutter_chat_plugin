@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:heyllo_ai_chatbot/chat_plugin.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:chat_plugin_example/heyllo_ai_chatbot.dart' as app;
+import 'package:chat_plugin_example/main.dart' as app;
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

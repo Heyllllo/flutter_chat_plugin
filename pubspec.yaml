@@ -1,7 +1,8 @@
-name: chat_plugin
-description: "A chat plugin for integrating your flutter app to heyllo."
+name: heyllo_ai_chatbot
+description: "An AI powered Flutter chatbot plugin for integrating into your flutter app."
 version: 0.0.1
-homepage:
+homepage: https://heyllo.co
+documentation: https://github.com/Heyllllo/flutter_chat_plugin
 
 environment:
   sdk: ^3.6.0

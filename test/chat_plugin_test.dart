@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chat_plugin/chat_plugin.dart';
-import 'package:chat_plugin/chat_plugin_platform_interface.dart';
-import 'package:chat_plugin/chat_plugin_method_channel.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin_method_channel.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin_platform_interface.dart';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockChatPluginPlatform 
+class MockChatPluginPlatform
     with MockPlatformInterfaceMixin
     implements ChatPluginPlatform {
-  
   @override
   Future<void> initialize({
     required String domain,
@@ -15,14 +15,14 @@ class MockChatPluginPlatform
   }) async {
     return;
   }
-  
+
   @override
   Stream<String> streamResponse({
     required String message,
   }) {
     return Stream.value('Test response');
   }
-  
+
   @override
   void dispose() {
     return;
@@ -39,18 +39,19 @@ void main() {
   test('initialize', () async {
     MockChatPluginPlatform fakePlatform = MockChatPluginPlatform();
     ChatPluginPlatform.instance = fakePlatform;
-    
+
     final plugin = ChatPlugin();
-    await plugin.initialize(domain: 'https://example.com', chatbotId: 'test-bot');
+    await plugin.initialize(
+        domain: 'https://example.com', chatbotId: 'test-bot');
   });
 
   test('streamResponse', () {
     MockChatPluginPlatform fakePlatform = MockChatPluginPlatform();
     ChatPluginPlatform.instance = fakePlatform;
-    
+
     final plugin = ChatPlugin();
     final stream = plugin.streamResponse(message: 'Hello');
-    
+
     expect(stream, isA<Stream<String>>());
   });
 }

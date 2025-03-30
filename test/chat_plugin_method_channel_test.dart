@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chat_plugin/chat_plugin_method_channel.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin_method_channel.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
