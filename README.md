@@ -26,7 +26,7 @@ Add the following to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  heyllo_ai_chatbot: ^1.0.0
+  heyllo_ai_chatbot: ^0.0.2
 ```
 
 Run `flutter pub get` to install the plugin.
