@@ -1,6 +1,4 @@
 import 'dart:async'; // For Stream
-import 'package:flutter/services.dart';
-import 'package:flutter_client_sse/flutter_client_sse.dart'; // Only needed for SSEModel type if mocking was possible
 import 'package:flutter_test/flutter_test.dart';
 import 'package:heyllo_ai_chatbot/chat_plugin_method_channel.dart';
 
