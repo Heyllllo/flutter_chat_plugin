@@ -416,9 +416,11 @@ class _ChatWidgetState extends State<ChatWidget> {
           // Input Area Divider
           if (widget.isEnabled)
             Divider(
-                height: 1,
-                thickness: 1,
-                color: Theme.of(context).dividerColor.withOpacity(0.5)),
+              height: 1,
+              thickness: 1,
+              color:
+                  Theme.of(context).dividerColor.withAlpha((255 * 0.5).round()),
+            ),
 
           // Input Area Container
           if (widget.isEnabled)

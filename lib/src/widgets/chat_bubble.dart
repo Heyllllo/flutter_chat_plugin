@@ -142,8 +142,8 @@ class ChatBubble extends StatelessWidget {
                 style: textStyle.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: textStyle.color
-                        ?.withOpacity(0.8) // Slightly dimmer title
+                    color: textStyle.color?.withAlpha(
+                        (255 * 0.8).round()) // Slightly dimmer title
                     ),
               ),
             ),
@@ -167,7 +167,7 @@ class ChatBubble extends StatelessWidget {
                       Icon(
                         isLink ? Icons.link : Icons.info_outline,
                         size: 12,
-                        color: textStyle.color?.withOpacity(0.7),
+                        color: textStyle.color?.withAlpha((255 * 0.8).round()),
                       ),
                       const SizedBox(width: 4),
                       // Citation text (title)
@@ -181,8 +181,8 @@ class ChatBubble extends StatelessWidget {
                                 ? (theme.sendButtonColor ??
                                     appTheme.colorScheme
                                         .primary) // Use theme accent or primary
-                                : textStyle.color
-                                    ?.withOpacity(0.7), // Dim non-links
+                                : textStyle.color?.withAlpha(
+                                    (255 * 0.7).round()), // Dim non-links
                             decoration: isLink
                                 ? TextDecoration.underline
                                 : TextDecoration.none,
@@ -225,8 +225,8 @@ class ChatBubble extends StatelessWidget {
                 style: textStyle.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
-                  color:
-                      textStyle.color?.withOpacity(0.8), // Slightly dimmer name
+                  color: textStyle.color
+                      ?.withAlpha((255 * 0.9).round()), // Slightly dimmer name
                 ),
               ),
             ),
@@ -270,7 +270,7 @@ class ChatBubble extends StatelessWidget {
                     (isUser
                             ? appTheme.colorScheme.onPrimary
                             : appTheme.colorScheme.primary)
-                        .withOpacity(0.7),
+                        .withAlpha((255 * 0.7).round()),
                 bubbleSize: 8,
                 spacing: 4,
               ),
@@ -297,8 +297,8 @@ class ChatBubble extends StatelessWidget {
                       fontSize: 10,
                       fontWeight:
                           FontWeight.w300, // Lighter weight for timestamp
-                      color:
-                          textStyle.color?.withOpacity(0.6), // Dimmer timestamp
+                      color: textStyle.color
+                          ?.withAlpha((255 * 0.6).round()), // Dimmer timestamp
                     ),
                   ),
                 ),
@@ -431,7 +431,7 @@ class ChatBubble extends StatelessWidget {
     // Use error colors from the theme
     return BoxDecoration(
       color: appTheme.colorScheme.errorContainer
-          .withOpacity(0.9), // Slightly transparent error bg
+          .withAlpha((255 * 0.9).round()), // Slightly transparent error bg
       borderRadius: theme.botBubbleBorderRadius ??
           BorderRadius.circular(16), // Use bot radius or default
       // Optional: Add a subtle border
