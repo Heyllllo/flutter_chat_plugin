@@ -69,8 +69,6 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
           StreamTransformer<SSEModel, Map<String, dynamic>>.fromHandlers(
               handleData:
                   (SSEModel event, EventSink<Map<String, dynamic>> sink) {
-        if (kDebugMode)
-
         // --- Handle specific backend event for stream end ---
         if (event.event == 'stream_end') {
           sink.add(

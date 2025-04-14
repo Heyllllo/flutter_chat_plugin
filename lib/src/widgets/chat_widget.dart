@@ -219,7 +219,7 @@ class _ChatWidgetState extends State<ChatWidget> {
       }
 
       if (mounted) setState(() {}); // Update UI to reflect initialized state
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (!mounted) return; // Check mount status *after* await catch
 
       _isInitialized = false; // Stay uninitialized on error
