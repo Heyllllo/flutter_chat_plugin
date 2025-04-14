@@ -255,7 +255,7 @@ class ChatService extends ChangeNotifier {
         onError: (error, stackTrace) {
           if (streamEndedPrematurely) return; // Ignore if already finalized
 
-          timeoutTimer?.cancel();
+          timeoutTimer.cancel();
           streamEndedPrematurely = true;
           _handleError(error, placeholderIndex);
           if (onError != null) onError(error);
@@ -269,7 +269,7 @@ class ChatService extends ChangeNotifier {
             return;
           }
 
-          timeoutTimer?.cancel();
+          timeoutTimer.cancel();
           streamEndedPrematurely = true; // Set flag
           // Call the finalization logic, passing the final accumulated text
           _finalizeResponse(
@@ -277,8 +277,8 @@ class ChatService extends ChangeNotifier {
               onResponseContent: onResponseContent);
         },
       );
-    } catch (e, stackTrace) {
-      timeoutTimer?.cancel();
+    } catch (e) {
+      timeoutTimer.cancel();
       streamEndedPrematurely = true;
       _handleError('Failed to initiate stream: $e', placeholderIndex);
       if (onError != null) onError(e);
