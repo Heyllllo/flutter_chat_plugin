@@ -4,13 +4,17 @@ A Flutter plugin for easily integrating AI powered chatbots into your mobile app
 
 ## Features
 
-- 🧠 Integrate AI-powered chatbots with minimal setup
-- 🎨 Fully customizable UI with comprehensive theme support
-- 🔄 Real-time streaming responses with animated typing indicators
-- 📱 Works across all Flutter platforms (iOS, Android)
-- 🧩 Easy to integrate with existing Flutter apps
-- 💬 Rich message bubbles with avatars and timestamps
-- 🛠️ Advanced error handling and debugging support
+- 🧠 Integrate AI-powered chatbots with minimal setup.
+- 🎨 Fully customizable UI with comprehensive theme support.
+- 🔄 Real-time streaming responses with animated typing indicators.
+- 📱 Works across all Flutter platforms (iOS, Android, Web - *check compatibility*).
+- 🧩 Easy to integrate with existing Flutter apps.
+- 💬 Rich message bubbles with optional avatars and timestamps.
+- 🔗 **Markdown Support:** Renders bot responses using Markdown syntax (bold, italics, lists, links, etc.).
+- 📄 **Citation Handling:** Displays citation sources provided by the backend.
+- ⚙️ **Configurable Features:** Toggle display of citations (`showCitations`) and enable/disable the entire chat widget (`isEnabled`).
+- 🆔 **Conversation Context:** Maintains conversation state using `thread_id`.
+- 🛠️ Advanced error handling and specific callbacks (`onCitationsReceived`, `onThreadIdReceived`).
 
 ## Prerequisites
 
@@ -26,18 +30,22 @@ Add the following to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  heyllo_ai_chatbot: ^0.0.2
+  flutter:
+    sdk: flutter
+  heyllo_ai_chatbot: ^0.0.3 # Use the latest version
+  flutter_markdown: ^0.7.1 # Required for Markdown rendering
+  url_launcher: ^6.2.6    # For opening links in Markdown/Citations
 ```
 
-Run `flutter pub get` to install the plugin.
+Run `flutter pub get` to install the dependencies.
 
-## Basic Usage (For Beginners)
+## Basic Usage
 
-The simplest way to add a Heyllo AI chatbot to your app, perfect if you have little to no knowledge of complex Flutter development:
+The simplest way to add a Heyllo AI chatbot to your app:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:heyllo_ai_chatbot/chat_plugin.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin.dart'; // Import the main package
 
 void main() {
   runApp(const MyApp());
@@ -62,17 +70,23 @@ class MyApp extends StatelessWidget {
 class ChatbotScreen extends StatelessWidget {
   const ChatbotScreen({super.key});
 
+  // Replace with your chatbot ID and domain from Heyllo.co
+  static const String chatbotId = 'your_chatbot_id_here';
+  static const String domain = 'https://heyllo.co';
+
   @override
   Widget build(BuildContext context) {
-    // Replace with your chatbot ID from Heyllo.co
-    const chatbotId = 'your_chatbot_id_here';
-    const domain = 'https://heyllo.co';
-
     return Scaffold(
       appBar: AppBar(title: const Text('My AI Assistant')),
       body: const ChatWidget(
+        // Required parameters
         domain: domain,
         chatbotId: chatbotId,
+
+        // Optional parameters (defaults are usually fine)
+        // isEnabled: true,
+        // showCitations: false,
+        // showTimestamps: false,
       ),
     );
   }
@@ -81,56 +95,75 @@ class ChatbotScreen extends StatelessWidget {
 
 ## Intermediate Usage
 
-For those who want to customize the appearance and add callbacks:
+Customize the appearance and handle events:
 
 ```dart
 ChatWidget(
   domain: 'https://heyllo.co',
   chatbotId: 'your_chatbot_id_here',
-  theme: ChatTheme(
-    userBubbleColor: Colors.blue,
+  theme: ChatTheme( // Customize theme properties
+    userBubbleColor: Colors.deepPurple,
     botBubbleColor: Colors.grey[200],
     userTextStyle: const TextStyle(color: Colors.white),
     botTextStyle: const TextStyle(color: Colors.black87),
     backgroundColor: Colors.white,
     inputDecoration: InputDecoration(
       hintText: 'Ask me anything...',
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      border: OutlineInputBorder( borderRadius: BorderRadius.circular(24) ),
       filled: true,
       fillColor: Colors.grey[100],
     ),
+    sendButtonColor: Colors.deepPurple,
   ),
-  showTimestamps: true,
+  // Control features
+  isEnabled: true, // Default: true
+  showTimestamps: true, // Default: false
+  showCitations: true, // Default: false
+
+  // Customize UI elements
   inputPlaceholder: 'Type your question...',
   sendButtonIcon: Icons.send_rounded,
+
+  // Provide initial messages (ensure 'type' is set)
   initialMessages: [
     ChatMessage(
-      message: 'Hello! How can I help you today?',
+      message: 'Hello! Ask me about our services.',
       isUser: false,
-      timestamp: DateTime.now(),
+      type: 'content', // Add message type
+      timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
     ),
   ],
+
+  // Handle callbacks
   onMessageSent: (message) {
     print('User sent: $message');
   },
-  onResponseReceived: (response) {
-    print('Bot responded: $response');
+  onResponseReceived: (response) { // Final combined text content
+    print('Bot final response text: $response');
+  },
+  onCitationsReceived: (citations) {
+    print('Received ${citations.length} citations: $citations');
+    // Handle citations if needed externally
+  },
+  onThreadIdReceived: (threadId) {
+    print('Received thread ID: $threadId');
+    // Store or use the thread ID
   },
   onError: (error) {
-    print('Error occurred: $error');
+    print('Chat Error occurred: $error');
+    // Display error to user, e.g., via SnackBar
   },
 )
 ```
 
 ## Advanced Usage
 
-For developers who need more control or want to deeply customize the chat experience:
-
-### Using the ChatService Directly
+For developers who need fine-grained control using ChatService:
 
 ```dart
+import 'package:flutter/material.dart';
+import 'package:heyllo_ai_chatbot/chat_plugin.dart';
+
 class CustomChatScreen extends StatefulWidget {
   const CustomChatScreen({super.key});
 
@@ -139,70 +172,114 @@ class CustomChatScreen extends StatefulWidget {
 }
 
 class _CustomChatScreenState extends State<CustomChatScreen> {
+  // Use ChatService directly for state management
   final _chatService = ChatService();
   final _textController = TextEditingController();
-  
+  final _scrollController = ScrollController(); // For managing scroll position
+
+  // Configuration
+  static const String chatbotId = 'your_chatbot_id_here';
+  static const String domain = 'https://heyllo.co';
+
+  // UI/Feature Flags
+  bool _showTimestamps = true;
+  bool _showCitations = true; // Example: Enable citations
+
   @override
   void initState() {
     super.initState();
     _initChat();
   }
-  
+
   Future<void> _initChat() async {
-    await _chatService.initialize(
-      domain: 'https://heyllo.co',
-      chatbotId: 'your_chatbot_id_here',
-    );
-    
-    // Add a welcome message
-    _chatService.addDirectMessage(
-      const ChatMessage(
-        message: 'Welcome! I\'m your custom AI assistant.',
-        isUser: false,
-        timestamp: DateTime.now(),
-      ),
-    );
+    try {
+      await _chatService.initialize(
+        domain: domain,
+        chatbotId: chatbotId,
+      );
+      // Add a welcome message (ensure type is set)
+      _chatService.addDirectMessage(
+        ChatMessage(
+          message: 'Welcome! I\'m your custom AI assistant. How can I help?',
+          isUser: false,
+          type: 'content', // Specify message type
+          timestamp: DateTime.now(),
+        ),
+      );
+    } catch (e) {
+      print("Failed to initialize chat: $e");
+      // Handle initialization error in UI
+    }
   }
-  
+
+  void _sendMessage() {
+    final text = _textController.text.trim();
+    if (text.isNotEmpty) {
+      print("Sending message: $text");
+      // Call service with desired callbacks
+      _chatService.sendMessage(
+        text,
+        onError: (error) => print("Error sending message: $error"),
+        onThreadIdReceived: (id) => print("Context Thread ID: $id"),
+        onCitationsReceived: (citations) => print("Got citations: $citations")
+      );
+      _textController.clear();
+      FocusScope.of(context).unfocus(); // Hide keyboard
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+    // Create a ChatTheme instance for the bubbles
+    final chatTheme = ChatTheme.fromTheme(theme).merge(const ChatTheme(
+      // Add any specific theme overrides here if needed
+      // e.g., botBubbleColor: Colors.lightGreen[100],
+    ));
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Custom Chat UI'),
-      ),
+      appBar: AppBar( title: const Text('Custom Chat UI') ),
       body: Column(
         children: [
           Expanded(
             child: ListenableBuilder(
               listenable: _chatService,
               builder: (context, _) {
+                // Scroll to bottom logic (optional but recommended)
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+
                 return ListView.builder(
-                  reverse: true,
+                  controller: _scrollController,
+                  // reverse: true, // Use reverse OR scrollController logic
+                  padding: const EdgeInsets.all(8),
                   itemCount: _chatService.messages.length,
-                  padding: const EdgeInsets.all(16),
                   itemBuilder: (context, index) {
-                    final message = _chatService.messages[
-                      _chatService.messages.length - 1 - index
-                    ];
-                    
+                    final message = _chatService.messages[index];
+                    // Render each message using ChatBubble
                     return ChatBubble(
                       message: message,
-                      theme: ChatTheme.fromTheme(theme),
-                      showAvatar: true,
-                      showTimestamp: true,
-                      senderName: message.isUser ? 'You' : 'AI Assistant',
-                      onTap: () {
-                        // Handle message tap
-                      },
+                      theme: chatTheme, // Pass the theme
+                      showAvatar: !message.isUser, // Show avatar for bot
+                      showTimestamp: _showTimestamps, // Use state variable
+                      showCitations: _showCitations, // Use state variable
+                      isError: message.type == 'error', // Style error messages
+                      // senderName: message.isUser ? 'You' : 'AI Assistant', // Optional
                     );
                   },
                 );
               },
             ),
           ),
-          
+
+          // Custom Input Area
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -214,20 +291,21 @@ class _CustomChatScreenState extends State<CustomChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
-                      border: InputBorder.none,
-                    ),
+                    decoration: const InputDecoration( hintText: 'Type a message...', border: InputBorder.none ),
+                    onSubmitted: (_) => _sendMessage(), // Send on keyboard action
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send, color: theme.colorScheme.primary),
-                  onPressed: () {
-                    if (_textController.text.isNotEmpty) {
-                      _chatService.sendMessage(_textController.text);
-                      _textController.clear();
-                    }
-                  },
+                // Use ListenableBuilder to disable button while loading
+                ListenableBuilder(
+                  listenable: _chatService,
+                  builder: (context, _) {
+                    return IconButton(
+                      icon: _chatService.isLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(Icons.send, color: theme.colorScheme.primary),
+                      onPressed: _chatService.isLoading ? null : _sendMessage,
+                    );
+                  }
                 ),
               ],
             ),
@@ -236,52 +314,25 @@ class _CustomChatScreenState extends State<CustomChatScreen> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
-    _chatService.dispose();
+    _chatService.dispose(); // IMPORTANT: Dispose the service
     _textController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }
 ```
 
-### Creating Custom Themes
+## Creating Custom Themes
 
 ```dart
 // Define multiple themes that users can switch between
 final Map<String, ChatTheme> chatThemes = {
-  'Light': const ChatTheme(
-    userBubbleColor: Colors.blue,
-    botBubbleColor: Color(0xFFF0F0F0),
-    userTextStyle: TextStyle(color: Colors.white),
-    botTextStyle: TextStyle(color: Colors.black87),
-    backgroundColor: Colors.white,
-  ),
-  
-  'Dark': const ChatTheme(
-    userBubbleColor: Colors.indigo,
-    botBubbleColor: Color(0xFF2D2D2D),
-    userTextStyle: TextStyle(color: Colors.white),
-    botTextStyle: TextStyle(color: Colors.white),
-    backgroundColor: Color(0xFF121212),
-    loadingIndicatorColor: Colors.white70,
-  ),
-  
-  'Playful': ChatTheme(
-    userBubbleColor: Colors.orange,
-    botBubbleColor: Colors.purple.shade50,
-    userTextStyle: const TextStyle(color: Colors.white),
-    botTextStyle: const TextStyle(color: Colors.purple),
-    userBubbleBorderRadius: BorderRadius.circular(24),
-    botBubbleBorderRadius: BorderRadius.circular(24),
-    inputDecoration: InputDecoration(
-      hintText: 'Say something fun...',
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(30),
-      ),
-    ),
-  ),
+  'Light': const ChatTheme( /* ... theme properties ... */ ),
+  'Dark': const ChatTheme( /* ... theme properties ... */ ),
+  'Playful': ChatTheme( /* ... theme properties ... */ ),
 };
 
 // Use the theme in your widget
@@ -294,9 +345,11 @@ ChatWidget(
 
 ## Customizing the Typing Indicator
 
-The plugin comes with a customizable bubble typing indicator:
+The BubbleTypingIndicator is used internally but can also be used standalone:
 
 ```dart
+import 'package:heyllo_ai_chatbot/src/widgets/typing_indicator.dart'; // Direct import if needed
+
 BubbleTypingIndicator(
   color: Colors.grey, // Custom color
   bubbleSize: 10.0,   // Size of each bubble
@@ -310,28 +363,24 @@ BubbleTypingIndicator(
 
 1. Create an account at [Heyllo.co](https://heyllo.co)
 2. Create a new chatbot and train it with your content
-3. Go to the Export tab in your dashboard
-4. Find your chatbot ID and domain in the API integration section
+3. Go to the Export tab in your chatbot dashboard
+4. Find your Chatbot ID and Domain (usually https://heyllo.co) in the API integration section
 5. Copy these details to use in your Flutter app
 
 ## Troubleshooting
 
-If you encounter issues with the connection:
+If you encounter issues:
 
-1. Double-check your chatbot ID and domain
-2. Ensure your device has internet connectivity
-3. Check if your chatbot is active on the Heyllo platform
-4. Enable debugging to see detailed logs:
-
-```dart
-// To enable verbose logs for SSE connection
-// Add this before using the ChatWidget
-debugPrint('Enabling SSE debug logs');
-```
+- **Verify Credentials**: Double-check your chatbotId and domain.
+- **Check Internet**: Ensure your device has network connectivity.
+- **Check Chatbot Status**: Confirm your chatbot is active on the Heyllo platform.
+- **Review Logs**: Check the debug console in your Flutter app for logs prefixed with `📡 Chat Plugin:` or `ChatService:`. These logs provide detailed information about connection attempts, data received, and errors. Enable kDebugMode for more verbose logs.
+- **Check pubspec.yaml**: Ensure heyllo_ai_chatbot and flutter_markdown are correctly listed under dependencies.
+- **Report Issues**: If problems persist, consider opening an issue on the plugin's repository (if available).
 
 ## Complete Example
 
-Check the `example` folder in the repository for a complete working sample app, including theme switching and advanced customization.
+Check the example folder in the repository for a complete working sample app, including theme switching and advanced customization.
 
 ## License
 
@@ -339,4 +388,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## About Heyllo Co
 
-[Heyllo Co](https://heyllo.co) provides AI-powered chatbots that you can easily train with your own data. Create your own chatbot in minutes without any coding skills required.
+Heyllo[https://heyllo.co/] provides AI-powered chatbots that you can easily train with your own data. Create your own chatbot in minutes without any coding skills required.

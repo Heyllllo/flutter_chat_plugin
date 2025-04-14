@@ -1,6 +1,6 @@
 name: heyllo_ai_chatbot
 description: "An AI powered Flutter chatbot plugin for integrating into your flutter app."
-version: 0.0.2+1
+version: 0.0.3
 homepage: https://heyllo.co
 documentation: https://github.com/Heyllllo/flutter_chat_plugin
 
@@ -16,6 +16,8 @@ dependencies:
   http: ^1.1.0
   flutter_client_sse: ^2.0.3
   mockito: ^5.4.5
+  url_launcher: ^6.3.1
+  flutter_markdown: ^0.7.7
 
 dev_dependencies:
   flutter_test:

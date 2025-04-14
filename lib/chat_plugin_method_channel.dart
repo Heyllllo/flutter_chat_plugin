@@ -1,27 +1,25 @@
 // lib/chat_plugin_method_channel.dart
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+// Assuming flutter_client_sse is the library used
 import 'package:flutter_client_sse/flutter_client_sse.dart';
 import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 import 'chat_plugin_platform_interface.dart';
 
+/// An implementation of [ChatPluginPlatform] that uses method channels.
 class MethodChannelChatPlugin extends ChatPluginPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('chat_plugin');
 
-  final http.Client httpClient;
   String? _domain;
   String? _chatbotId;
   StreamController<SSEModel>? _streamController;
 
-  MethodChannelChatPlugin({http.Client? httpClient})
-      : httpClient = httpClient ?? http.Client();
-
+  // ... (initialize method remains the same) ...
   @override
   Future<void> initialize({
     required String domain,
@@ -29,169 +27,170 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
   }) async {
     _domain = domain;
     _chatbotId = chatbotId;
+    print(
+        '📡 Chat Plugin Initialized (Method Channel): Domain=$_domain, ChatbotId=$_chatbotId');
+    await _streamController?.close();
+    _streamController = null;
+    SSEClient.unsubscribeFromSSE();
   }
 
-// In chat_plugin_method_channel.dart
-// In chat_plugin_method_channel.dart
-
-// Add detailed logging to the streamResponse method
   @override
-  Stream<String> streamResponse({
+  Stream<Map<String, dynamic>> streamResponse({
     required String message,
+    String? threadId,
   }) {
+    if (_domain == null || _chatbotId == null) {
+      final error = ArgumentError(
+          'ChatPlugin must be initialized before calling streamResponse.');
+      print('📡 Chat Plugin Error: ${error.message}');
+      return Stream.value({
+        'type': 'error',
+        'message': 'Initialization required.',
+        'error_details': error.toString(),
+      });
+    }
+
     try {
-      // Log the request info
       print('📡 Chat Plugin: Preparing request');
-
-      // Construct URL: https://heyllo.co/api/chat/syihwef?query=Hi
-      final sseUrl = Uri.parse('$_domain/api/chat/$_chatbotId').replace(
-        queryParameters: {
-          'query': message,
-        },
-      );
-
-      // Log the URL being accessed
+      final queryParams = {'query': message};
+      if (threadId != null && threadId.isNotEmpty) {
+        queryParams['thread_id'] = threadId;
+        print('📡 Chat Plugin: Sending with thread_id: $threadId');
+      }
+      final sseUrl = Uri.parse('$_domain/api/chat/$_chatbotId')
+          .replace(queryParameters: queryParams);
       print('📡 Chat Plugin: Connecting to SSE URL: $sseUrl');
-      print(
-          '📡 Chat Plugin: With headers: Accept=text/event-stream, Cache-Control=no-cache');
 
-      // Cleanup any existing stream
       _streamController?.close();
       _streamController = StreamController<SSEModel>();
 
-      // Create a transformer that logs everything
       final loggingTransformer =
           StreamTransformer<SSEModel, SSEModel>.fromHandlers(
-        handleData: (event, sink) {
-          print('📡 Chat Plugin: Received event: ${event.event}');
-          print('📡 Chat Plugin: Received data: ${event.data}');
-          sink.add(event);
-        },
-        handleError: (error, stackTrace, sink) {
-          print('📡 Chat Plugin: Error in SSE stream: $error');
-          print('📡 Chat Plugin: Error stacktrace: $stackTrace');
-          sink.addError(error, stackTrace);
-        },
-        handleDone: (sink) {
-          print('📡 Chat Plugin: SSE stream closed');
-          sink.close();
-        },
-      );
+              /* ... logging logic ... */);
 
-      // Create the regular transformer to convert SSEModel to String
-      // In chat_plugin_method_channel.dart
-// Update the transformer in the streamResponse method
-
-      final transformer = StreamTransformer<SSEModel, String>.fromHandlers(
-        handleData: (SSEModel event, EventSink<String> sink) {
-          // Print more detailed debug info
+      // *** UPDATED TRANSFORMER ***
+      final transformer =
+          StreamTransformer<SSEModel, Map<String, dynamic>>.fromHandlers(
+              handleData:
+                  (SSEModel event, EventSink<Map<String, dynamic>> sink) {
+        if (kDebugMode)
           print(
-              '📡 Chat Plugin: Processing event: "${event.event}" with data: ${event.data}');
+              '📡 Chat Plugin [PROCESS]: Processing event: "${event.event}", data: ${event.data}');
 
-          // Handle data events - either empty event name or "message" event
-          if ((event.event == null ||
-                  event.event!.isEmpty ||
-                  event.event == 'message') &&
-              event.data != null) {
-            try {
-              // Trim whitespace before parsing JSON
-              final String cleanData = event.data!.trim();
-              final Map<String, dynamic> jsonData = jsonDecode(cleanData);
+        // --- Handle specific backend event for stream end ---
+        if (event.event == 'stream_end') {
+          print(
+              '📡 Chat Plugin [PROCESS]: Detected stream_end event. Emitting specific type.');
+          sink.add(
+              {'type': 'stream_end'}); // Emit a specific map for this event
+          return; // Stop further processing for this event
+        }
+        // --- End stream_end handling ---
 
-              if (jsonData.containsKey('error')) {
-                // This is an error message, handle it as an error
-                final errorMessage = jsonData['error'];
-                print('📡 Chat Plugin: Server returned error: $errorMessage');
-                sink.addError(
-                  Exception(errorMessage),
-                  StackTrace.current,
-                );
-                return;
-              }
+        // Process regular data events
+        if (event.data != null && event.data!.isNotEmpty) {
+          try {
+            final String cleanData = event.data!.trim();
+            if (cleanData.isEmpty) return;
 
-              if (jsonData.containsKey('text')) {
-                // This is a text chunk in the expected format
-                print('📡 Chat Plugin: Extracted text: "${jsonData['text']}"');
-                sink.add(jsonData['text']);
-                return;
-              }
-            } catch (e) {
-              // Not JSON or couldn't parse - just treat as regular text
+            final Map<String, dynamic> jsonData = jsonDecode(cleanData);
+            final type = jsonData['type'] as String?;
+
+            if (type == null || type.isEmpty) {
               print(
-                  '📡 Chat Plugin: Could not parse as JSON: "${event.data}" - Error: $e');
+                  '📡 Chat Plugin [WARN]: Received data chunk without a "type" field: $cleanData');
+              return;
             }
 
-            // Default behavior - pass through the raw data
-            print('📡 Chat Plugin: Using raw data: ${event.data}');
-            sink.add(event.data!);
-          } else if (event.event == 'stream-done') {
-            // Handle the stream-done event - nothing to do, just for tracking
-            print('📡 Chat Plugin: Stream done event received');
-          }
-        },
-        handleError: (error, stackTrace, sink) {
-          // Propagate errors through the stream
-          print('📡 Chat Plugin: Error in transformer: $error');
-          sink.addError(error, stackTrace);
-        },
-      );
-      print('📡 Chat Plugin: Subscribing to SSE stream');
+            const validTypes = {
+              'content',
+              'metadata',
+              'citations',
+              'error'
+            }; // Removed 'stream-done' if not used
+            if (!validTypes.contains(type)) {
+              print(
+                  '📡 Chat Plugin [WARN]: Received unknown data type "$type": $cleanData');
+            }
 
-      // Subscribe to SSE with logging
+            if (kDebugMode)
+              print('📡 Chat Plugin [EMIT]: Parsed JSON: $jsonData');
+            sink.add(jsonData);
+          } on FormatException catch (e) {
+            print(
+                '📡 Chat Plugin [ERROR]: Failed to parse JSON: "${event.data}" - Error: $e');
+            sink.add({
+              'type': 'error',
+              'message': 'Received non-JSON data.',
+              'raw_data': event.data,
+              'error_details': e.toString()
+            });
+          } catch (e, stackTrace) {
+            print(
+                '📡 Chat Plugin [ERROR]: Unexpected error processing data: $e\n$stackTrace');
+            sink.add({
+              'type': 'error',
+              'message': 'Internal processing error.',
+              'raw_data': event.data,
+              'error_details': e.toString()
+            });
+          }
+        } else {
+          // Log other non-data or non-stream_end events if needed
+          if (kDebugMode && (event.event != null && event.event!.isNotEmpty)) {
+            print(
+                '📡 Chat Plugin [PROCESS]: Received unhandled named event: "${event.event}", data: ${event.data}');
+          }
+        }
+      }, handleError: (error, stackTrace, sink) {
+        print('📡 Chat Plugin [TRANSFORM ERROR]: Propagating error: $error');
+        sink.add({
+          'type': 'error',
+          'message': 'Connection error.',
+          'error_details': error.toString()
+        });
+      }, handleDone: (sink) {
+        print(
+            '📡 Chat Plugin [TRANSFORM DONE]: Source stream closed. Closing transformer.');
+        sink.close();
+      });
+
+      print('📡 Chat Plugin: Subscribing to SSE stream...');
       final stream = SSEClient.subscribeToSSE(
         method: SSERequestType.GET,
         url: sseUrl.toString(),
-        header: {
-          'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-        },
+        header: {'Accept': 'text/event-stream', 'Cache-Control': 'no-cache'},
         oldStreamController: _streamController,
       );
 
-      print('📡 Chat Plugin: SSE subscription created, waiting for events...');
-
-      // Transform with logging first, then with the regular transformer
-      return stream.transform(loggingTransformer).transform(transformer);
-    } catch (e) {
-      print('📡 Chat Plugin: Error establishing SSE connection: $e');
-      return Stream<String>.error(
-        Exception('Error establishing SSE connection: $e'),
-        StackTrace.current,
-      );
+      print('📡 Chat Plugin: SSE subscription initiated.');
+      return stream
+          .transform(kDebugMode
+              ? loggingTransformer
+              : StreamTransformer.fromHandlers())
+          .transform(transformer)
+          .handleError((error) {
+        print('📡 Chat Plugin [FINAL ERROR]: $error');
+      });
+    } catch (e, stackTrace) {
+      print('📡 Chat Plugin [SETUP ERROR]: $e\n$stackTrace');
+      return Stream.value({
+        'type': 'error',
+        'message': 'Failed to setup connection.',
+        'error_details': e.toString()
+      }).asBroadcastStream();
     }
   }
 
+  // ... (dispose method remains the same) ...
   @override
   void dispose() {
-    // Cleanup SSE connection
+    print('📡 Chat Plugin: Disposing MethodChannelChatPlugin...');
     SSEClient.unsubscribeFromSSE();
     _streamController?.close();
     _streamController = null;
-  }
-}
-
-// A simple HTTP logging interceptor
-class LoggingInterceptor extends http.BaseClient {
-  final http.Client _inner = http.Client();
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // Log request details
-    print('📡 HTTP: ${request.method} ${request.url}');
-    print('📡 HTTP: Headers: ${request.headers}');
-
-    // Send the request
-    final response = await _inner.send(request);
-
-    // Log response details
-    print('📡 HTTP: Response status: ${response.statusCode}');
-    print('📡 HTTP: Response headers: ${response.headers}');
-
-    return response;
-  }
-
-  @override
-  void close() {
-    _inner.close();
+    _domain = null;
+    _chatbotId = null;
+    print('📡 Chat Plugin: Dispose complete.');
   }
 }
