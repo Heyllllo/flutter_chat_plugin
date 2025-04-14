@@ -115,7 +115,7 @@ class ChatTheme {
     if (botBubbleDecoration != null) return botBubbleDecoration!;
 
     return BoxDecoration(
-      color: botBubbleColor ?? appTheme.colorScheme.surfaceVariant,
+      color: botBubbleColor ?? appTheme.colorScheme.surfaceContainerHighest,
       borderRadius: botBubbleBorderRadius ?? BorderRadius.circular(16),
     );
   }
