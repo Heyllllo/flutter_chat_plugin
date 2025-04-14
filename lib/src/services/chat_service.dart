@@ -317,8 +317,8 @@ class ChatService extends ChangeNotifier {
     } else if (error is Exception) {
       errorMessage = error.toString();
     }
-    final fullErrorMessage = 'Error: $errorMessage' +
-        (errorDetails != null ? '\nDetails: $errorDetails' : '');
+    final fullErrorMessage =
+        'Error: $errorMessage${errorDetails != null ? '\nDetails: $errorDetails' : ''}';
     _updateMessage(messageIndex, (msg) {
       return msg.copyWith(
           message: fullErrorMessage,
