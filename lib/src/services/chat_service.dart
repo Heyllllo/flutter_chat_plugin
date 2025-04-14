@@ -167,7 +167,7 @@ class ChatService extends ChangeNotifier {
 
           if (!receivedData) {
             receivedData = true;
-            timeoutTimer?.cancel();
+            timeoutTimer.cancel();
           }
 
           // if (kDebugMode)
@@ -180,7 +180,7 @@ class ChatService extends ChangeNotifier {
             switch (type) {
               // *** HANDLE STREAM_END EVENT HERE ***
               case 'stream_end':
-                timeoutTimer?.cancel(); // Cancel timer
+                timeoutTimer.cancel(); // Cancel timer
                 streamEndedPrematurely = true; // Set flag
                 _finalizeResponse(
                     placeholderIndex, accumulatedResponseText, currentCitations,
@@ -235,7 +235,7 @@ class ChatService extends ChangeNotifier {
                 final errorMessage =
                     data['message'] as String? ?? 'Unknown server error';
 
-                timeoutTimer?.cancel();
+                timeoutTimer.cancel();
                 streamEndedPrematurely = true;
                 _handleError(errorMessage, placeholderIndex,
                     errorDetails: data['error_details'] as String?);
@@ -246,7 +246,7 @@ class ChatService extends ChangeNotifier {
                 return;
               default:
             }
-          } catch (e, stackTrace) {
+          } catch (e) {
             _handleError('Error processing response', placeholderIndex,
                 errorDetails: e.toString());
             // Don't automatically stop stream here unless it's fatal

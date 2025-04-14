@@ -235,8 +235,9 @@ class _ChatWidgetState extends State<ChatWidget> {
             type: 'error',
             timestamp: DateTime.now()));
       }
-      if (mounted)
-        setState(() {}); // Update UI to show error/uninitialized state
+      if (mounted) {
+        setState(() {});
+      } // Update UI to show error/uninitialized state
     }
   }
 
