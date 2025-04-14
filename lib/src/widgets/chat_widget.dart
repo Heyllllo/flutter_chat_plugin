@@ -130,7 +130,7 @@ class _ChatWidgetState extends State<ChatWidget> {
 
     bool configChanged = oldWidget.domain != widget.domain ||
         oldWidget.chatbotId != widget.chatbotId;
-    bool enablementChanged = oldWidget.isEnabled != widget.isEnabled;
+    // bool enablementChanged = oldWidget.isEnabled != widget.isEnabled;
 
     // Re-initialize if core config changes OR if it was disabled and now enabled
     if (widget.isEnabled && (configChanged || !oldWidget.isEnabled)) {

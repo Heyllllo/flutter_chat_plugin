@@ -93,8 +93,7 @@ class ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final messageTimestamp =
-        message.timestamp?.millisecondsSinceEpoch ?? 'null_ts';
+ 
 
     final appTheme = Theme.of(context);
     final isUser = message.isUser;
