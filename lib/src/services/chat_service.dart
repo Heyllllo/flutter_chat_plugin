@@ -195,8 +195,9 @@ class ChatService extends ChangeNotifier {
                     newThreadId.isNotEmpty &&
                     newThreadId != _currentThreadId) {
                   _currentThreadId = newThreadId;
-                  if (onThreadIdReceived != null)
+                  if (onThreadIdReceived != null) {
                     onThreadIdReceived(newThreadId);
+                  }
                 }
                 break;
               case 'content':
@@ -226,8 +227,9 @@ class ChatService extends ChangeNotifier {
                         (msg) => msg.copyWith(
                             citations: List.from(msg.citations ?? [])
                               ..addAll(newCitations)));
-                    if (onCitationsReceived != null)
+                    if (onCitationsReceived != null) {
                       onCitationsReceived(currentCitations);
+                    }
                   }
                 }
                 break;
