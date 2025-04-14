@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import '../models/chat_message.dart';
+
 import '../../chat_plugin.dart';
 
 class ChatService extends ChangeNotifier {
