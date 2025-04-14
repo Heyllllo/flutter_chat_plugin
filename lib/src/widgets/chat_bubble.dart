@@ -69,11 +69,13 @@ class ChatBubble extends StatelessWidget {
       if (canLaunch) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not open link: $url')),
         );
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening link: $e')),
       );
@@ -83,6 +85,7 @@ class ChatBubble extends StatelessWidget {
   /// Copies the message text to the clipboard.
   void _copyToClipboard(BuildContext context) {
     Clipboard.setData(ClipboardData(text: message.message)).then((_) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             duration: Duration(seconds: 1),
@@ -313,6 +316,7 @@ class ChatBubble extends StatelessWidget {
     Widget bubbleInteractive = Material(
       // Material needed for InkWell splash and borderRadius clipping
       color: Colors.transparent, // Make material transparent
+      // ignore: unnecessary_type_check
       borderRadius: (decoration is BoxDecoration)
           ? (decoration.borderRadius
               as BorderRadius?) // Cast BorderRadiusGeometry? to BorderRadius?
