@@ -134,8 +134,6 @@ class _ChatWidgetState extends State<ChatWidget> {
 
     // Re-initialize if core config changes OR if it was disabled and now enabled
     if (widget.isEnabled && (configChanged || !oldWidget.isEnabled)) {
-      print(
-          "ChatWidget: Configuration or enablement changed, re-initializing...");
       _isInitialized = false; // Mark for re-initialization
       _initialMessagesAdded =
           false; // Allow initial messages again if config changed
@@ -144,7 +142,7 @@ class _ChatWidgetState extends State<ChatWidget> {
       _initializeChatIfNeeded(); // Trigger initialization
     } else if (!widget.isEnabled && oldWidget.isEnabled) {
       // If disabling, clear messages and cancel streams
-      print("ChatWidget: Disabling chat.");
+
       _chatService.clearMessages();
       // Note: The service's dispose handles stream cancellation.
       _isInitialized = false; // Mark as uninitialized
@@ -194,17 +192,13 @@ class _ChatWidgetState extends State<ChatWidget> {
   Future<void> _initializeChatIfNeeded() async {
     // Prevent multiple initializations and initialization if disabled or disposed
     if (!widget.isEnabled || _isInitialized || !mounted) {
-      if (!widget.isEnabled)
-        print("ChatWidget: Initialization skipped (disabled).");
-      if (_isInitialized)
-        print("ChatWidget: Initialization skipped (already initialized).");
-      if (!mounted) print("ChatWidget: Initialization skipped (not mounted).");
+      if (!widget.isEnabled) if (_isInitialized) if (!mounted)
+
       // If disabled, ensure UI reflects it
       if (!widget.isEnabled && mounted) setState(() {});
       return;
     }
 
-    print("ChatWidget: Initializing ChatService...");
     if (mounted) setState(() {}); // Show loading indicator maybe
 
     try {
@@ -214,14 +208,12 @@ class _ChatWidgetState extends State<ChatWidget> {
       );
       if (!mounted) return; // Check mount status *after* await
 
-      print("ChatWidget: Initialization complete.");
       _isInitialized = true;
 
       // Add initial messages *after* successful initialization
       if (!_initialMessagesAdded &&
           widget.initialMessages != null &&
           widget.initialMessages!.isNotEmpty) {
-        print("ChatWidget: Adding initial messages...");
         for (final message in widget.initialMessages!) {
           _chatService.addDirectMessage(message);
         }
@@ -232,7 +224,6 @@ class _ChatWidgetState extends State<ChatWidget> {
 
       if (mounted) setState(() {}); // Update UI to reflect initialized state
     } catch (e, stackTrace) {
-      print("ChatWidget: Initialization failed: $e\n$stackTrace");
       if (!mounted) return; // Check mount status *after* await catch
 
       _isInitialized = false; // Stay uninitialized on error
@@ -261,8 +252,6 @@ class _ChatWidgetState extends State<ChatWidget> {
     final messageText = _textController.text.trim();
     if (messageText.isEmpty) return;
 
-    print("ChatWidget: Sending message: $messageText");
-
     // Call user callback immediately
     widget.onMessageSent?.call(messageText);
 
@@ -278,7 +267,6 @@ class _ChatWidgetState extends State<ChatWidget> {
       onCitationsReceived: widget.onCitationsReceived,
       onThreadIdReceived: widget.onThreadIdReceived,
       onError: (error) {
-        print("ChatWidget: Received error callback from service: $error");
         // Service already adds error message to list. Call external handler.
         widget.onError?.call(error);
         // Optionally show a snackbar or other feedback
@@ -535,12 +523,10 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   @override
   void dispose() {
-    print("ChatWidget: Disposing...");
     _chatService.removeListener(_serviceListener); // Remove listener
     _chatService.dispose(); // Dispose the service (cancels streams, etc.)
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
-    print("ChatWidget: Dispose complete.");
   }
 }

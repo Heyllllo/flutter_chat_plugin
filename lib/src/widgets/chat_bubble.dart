@@ -45,7 +45,6 @@ class ChatBubble extends StatelessWidget {
     // Try adding scheme if missing
     Uri? url = Uri.tryParse(urlString);
     if (url == null) {
-      print('ChatBubble: Could not parse URL: $urlString');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not open invalid link: $urlString')),
       );
@@ -57,8 +56,7 @@ class ChatBubble extends StatelessWidget {
       url = Uri.tryParse('https://$urlString');
       if (url == null || !url.hasScheme) {
         // Check again after adding scheme
-        print(
-            'ChatBubble: Could not parse URL after adding scheme: $urlString');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not open link: $urlString')),
         );
@@ -71,13 +69,11 @@ class ChatBubble extends StatelessWidget {
       if (canLaunch) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        print('ChatBubble: Could not launch URL: $url');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not open link: $url')),
         );
       }
     } catch (e) {
-      print('ChatBubble: Error launching URL $url: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening link: $e')),
       );
@@ -99,8 +95,6 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final messageTimestamp =
         message.timestamp?.millisecondsSinceEpoch ?? 'null_ts';
-    print(
-        "ChatBubble [build]: Building bubble for msg (ts: $messageTimestamp, isUser: ${message.isUser}). isWaiting=${message.isWaiting}");
 
     final appTheme = Theme.of(context);
     final isUser = message.isUser;

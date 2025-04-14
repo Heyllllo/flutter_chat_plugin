@@ -1,5 +1,5 @@
 // lib/src/models/chat_message.dart
-import 'package:flutter/foundation.dart'; // Import for kDebugMode if needed later
+// Import for kDebugMode if needed later
 
 class ChatMessage {
   final String message; // 'text' for content, description for others
@@ -71,11 +71,8 @@ class ChatMessage {
     } else if (citations is List<Map<String, dynamic>>?) {
       // Explicitly passed citations (could be null)
       finalCitations = citations;
-    } else if (citations is Object) {
-      // Sentinel means no change from original
-      finalCitations = this.citations;
     } else {
-      // Default: Keep original if no input
+      // Sentinel means no change from original
       finalCitations = this.citations;
     }
 
