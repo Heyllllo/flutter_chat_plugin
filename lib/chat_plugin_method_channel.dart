@@ -108,7 +108,7 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
               'raw_data': event.data,
               'error_details': e.toString()
             });
-          } catch (e, stackTrace) {
+          } catch (e) {
             sink.add({
               'type': 'error',
               'message': 'Internal processing error.',
@@ -143,7 +143,7 @@ class MethodChannelChatPlugin extends ChatPluginPlatform {
               : StreamTransformer.fromHandlers())
           .transform(transformer)
           .handleError((error) {});
-    } catch (e, stackTrace) {
+    } catch (e) {
       return Stream.value({
         'type': 'error',
         'message': 'Failed to setup connection.',

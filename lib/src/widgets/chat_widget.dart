@@ -192,10 +192,6 @@ class _ChatWidgetState extends State<ChatWidget> {
   Future<void> _initializeChatIfNeeded() async {
     // Prevent multiple initializations and initialization if disabled or disposed
     if (!widget.isEnabled || _isInitialized || !mounted) {
-      if (!widget.isEnabled) if (_isInitialized) if (!mounted)
-
-      // If disabled, ensure UI reflects it
-      if (!widget.isEnabled && mounted) setState(() {});
       return;
     }
 

@@ -84,7 +84,7 @@ class ChatService extends ChangeNotifier {
           onCitationsReceived: onCitationsReceived,
           onThreadIdReceived: onThreadIdReceived,
           onError: onError);
-    } catch (e, stackTrace) {
+    } catch (e) {
       _handleError('Failed to send message: $e', _messages.length - 1);
       if (onError != null) onError(e);
       _setLoading(false);
