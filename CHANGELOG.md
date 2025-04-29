@@ -41,3 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Persistent Loading Indicator:** Fixed an issue where the loading indicator on bot messages would not disappear after the response was fully received.
 - **Type Errors:** Corrected type mismatches in `ChatBubble` related to `BorderRadiusGeometry`/`BorderRadius` and `EdgeInsetsGeometry`/`EdgeInsets`.
+
+### Changed
+- Updated README documentation.
+
+## [0.0.3+1] - 2025-04-29
+
+### Changed
+- Updated README documentation.
