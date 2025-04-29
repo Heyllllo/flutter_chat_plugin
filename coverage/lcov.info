@@ -1,4 +1,4 @@
-SF:lib/chat_plugin.dart
+SF:lib/heyllo_ai_chatbot.dart
 DA:8,1
 DA:12,2
 DA:18,1
@@ -12,7 +12,7 @@ DA:51,2
 LF:10
 LH:10
 end_of_record
-SF:lib/chat_plugin_platform_interface.dart
+SF:lib/heyllo_ai_chatbot_platform_interface.dart
 DA:5,3
 DA:7,3
 DA:8,3
@@ -32,7 +32,7 @@ DA:47,0
 LF:16
 LH:6
 end_of_record
-SF:lib/chat_plugin_method_channel.dart
+SF:lib/heyllo_ai_chatbot_method_channel.dart
 DA:21,0
 DA:26,0
 DA:27,0

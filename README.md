@@ -45,7 +45,7 @@ The simplest way to add a Heyllo AI chatbot to your app:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:heyllo_ai_chatbot/chat_plugin.dart'; // Import the main package
+import 'package:heyllo_ai_chatbot/heyllo_ai_chatbot.dart'; // Import the main package
 
 void main() {
   runApp(const MyApp());
@@ -162,7 +162,7 @@ For developers who need fine-grained control using ChatService:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:heyllo_ai_chatbot/chat_plugin.dart';
+import 'package:heyllo_ai_chatbot/heyllo_ai_chatbot.dart';
 
 class CustomChatScreen extends StatefulWidget {
   const CustomChatScreen({super.key});

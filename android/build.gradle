@@ -1,4 +1,4 @@
-group = "com.example.chat_plugin"
+group = "com.example.heyllo_ai_chatbot"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -25,7 +25,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "com.example.chat_plugin"
+    namespace = "com.example.heyllo_ai_chatbot"
 
     compileSdk = 35
 
